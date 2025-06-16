@@ -12,3 +12,6 @@ A real-time hand gesture recognition system using Python, OpenCV, and MediaPipe.
 ```bash
 pip install -r requirements.txt
 python hand_gesture.py
+
+# Activate the venv every time
+.\venv\Scripts\activate

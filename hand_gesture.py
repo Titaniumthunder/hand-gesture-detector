@@ -1,65 +1,76 @@
 import cv2
 import mediapipe as mp
 
-# Initialize MediaPipe Hands
+# Initialize MediaPipe
 mp_hands = mp.solutions.hands
-hands = mp_hands.Hands(max_num_hands=1)
 mp_draw = mp.solutions.drawing_utils
+hands = mp_hands.Hands(
+    max_num_hands=2,
+    min_detection_confidence=0.7,
+    min_tracking_confidence=0.7
+)
 
-# Finger tip landmarks
+# Tip landmark indexes (excluding thumb)
 finger_tips = [8, 12, 16, 20]
 
 # Start webcam
 cap = cv2.VideoCapture(0)
-
-# Create named window that is resizable
-cv2.namedWindow("Hand Gesture Detection", cv2.WINDOW_NORMAL)
-cv2.resizeWindow("Hand Gesture Detection", 720, 720)  # Set initial size
+cv2.namedWindow("Two-Hand Gesture Detection", cv2.WINDOW_NORMAL)
+cv2.resizeWindow("Two-Hand Gesture Detection", 720, 720)
 
 while True:
     ret, frame = cap.read()
     if not ret:
         break
 
-    # Flip and convert to RGB
     frame = cv2.flip(frame, 1)
     rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-
     results = hands.process(rgb)
 
-    if results.multi_hand_landmarks:
-        for hand in results.multi_hand_landmarks:
+    if results.multi_hand_landmarks and results.multi_handedness:
+        for hand_landmarks, handedness in zip(results.multi_hand_landmarks, results.multi_handedness):
+            # Flip label because of camera flip
+            raw_label = handedness.classification[0].label  # 'Left' or 'Right'
+            hand_label = "Right" if raw_label == "Left" else "Left"
+
             lm_list = []
-            for i, lm in enumerate(hand.landmark):
-                h, w, _ = frame.shape
+            h, w, _ = frame.shape
+            for lm in hand_landmarks.landmark:
                 cx, cy = int(lm.x * w), int(lm.y * h)
                 lm_list.append((cx, cy))
 
-            # Count raised fingers
             fingers_up = 0
             if lm_list:
-                # Thumb (basic right-hand logic)
-                if lm_list[4][0] > lm_list[3][0]:
-                    fingers_up += 1
+                # --- Thumb ---
+                thumb_tip = lm_list[4]
+                thumb_ip = lm_list[3]
+                if hand_label == "Right":
+                    if thumb_tip[0] > thumb_ip[0]:
+                        fingers_up += 1
+                else:  # Left
+                    if thumb_tip[0] < thumb_ip[0]:
+                        fingers_up += 1
 
-                # Other fingers
+                # --- Other Fingers ---
                 for tip in finger_tips:
                     if lm_list[tip][1] < lm_list[tip - 2][1]:
                         fingers_up += 1
 
-            # Display number of fingers
-            cv2.putText(frame, f'Fingers: {fingers_up}', (10, 70),
-                        cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 3)
+                # --- Label above hand ---
+                top_y = min([pt[1] for pt in lm_list])
+                label_pos = (lm_list[0][0] - 60, top_y - 20)
 
-            mp_draw.draw_landmarks(frame, hand, mp_hands.HAND_CONNECTIONS)
+                cv2.putText(frame, f"{hand_label} hand: {fingers_up} finger(s)",
+                            label_pos,
+                            cv2.FONT_HERSHEY_DUPLEX, 0.9, (0, 255, 0), 2, cv2.LINE_AA)
 
-    # Show the frame
-    cv2.imshow("Hand Gesture Detection", frame)
+            # Draw landmarks
+            mp_draw.draw_landmarks(frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
-    # Quit on 'q'
+    # Show frame
+    cv2.imshow("Two-Hand Gesture Detection", frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
 
-# Cleanup
 cap.release()
 cv2.destroyAllWindows()

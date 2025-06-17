@@ -18,4 +18,6 @@ This project uses **MediaPipe** and **OpenCV** to track both hand in real time u
 Install dependencies with:
 
 ```bash
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt

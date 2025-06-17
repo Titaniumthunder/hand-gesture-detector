@@ -1,16 +1,21 @@
-# Hand Gesture Detector 🖐️
+# ✋ Hand Gesture Tracker
 
-A real-time hand gesture recognition system using Python, OpenCV, and MediaPipe.
+This project uses **MediaPipe** and **OpenCV** to track a single hand in real time using your webcam. It detects finger positions and displays how many fingers are currently raised.
 
-## Features
+---
 
-- Live webcam detection
-- Counts raised fingers
-- Resizable camera window (720x720)
-- Ready for gesture-based apps
+## 📸 Features
 
-## How to Run
+- Detects 1 hand using MediaPipe
+- Labels each finger landmark in real time
+- Counts number of raised fingers
+- Displays results as overlay on live webcam feed
+
+---
+
+## 🛠 Requirements
+
+Install dependencies with:
 
 ```bash
 pip install -r requirements.txt
-python hand_gesture.py

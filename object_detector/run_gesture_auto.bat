@@ -14,7 +14,7 @@ if exist "venv\Scripts\activate.bat" (
 )
 
 :: Check if hand_gesture.py exists
-if exist "hand_gesture.py" (
+if exist "yolo_webcam.py" (
     call venv\Scripts\python.exe hand_gesture.py
 ) else (
     echo [ERROR] Cannot find hand_gesture.py
